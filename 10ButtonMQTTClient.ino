@@ -2,26 +2,24 @@
 #include <PubSubClient.h>
 #include "InputDebounce.h"
 
-#define BUTTON_DEBOUNCE_DELAY   20   // [ms]
+#define BUTTON_DEBOUNCE_DELAY 20   // [ms]
 
 static const int pinLED = LED_BUILTIN; // 13
 static int pinPB[11];
 int i;
 
-// Network Setup Information//////////////////////////////////////
+// Network Setup Information
 
 const char* ssid = "VFCFalloutTrackerA";
 const char* wifi_password = "BuildTeam32550";
 const char* mqtt_server = "192.168.6.1";  // IP of the MQTT broker (raspberry pi)
 const char* mqtt_username = "VFCA";
-const char* mqtt_password = "Swagelok2021";
+const char* mqtt_password = "";
 const char* clientID = "FalloutA_ESP32"; // MQTT client ID
 const char* button_topic = "falloutdash/button";
 
 WiFiClient wifiClient;
 PubSubClient mqtt_client(mqtt_server, 1883, wifiClient); 
-
-
 
 class MyInputDebounce : public InputDebounce
 {
@@ -83,31 +81,30 @@ private:
 static MyInputDebounce PB[11];
 
 void setup_wifi() {
-  delay(100);
-  // We start by connecting to a WiFi network
-  WiFi.begin(ssid, wifi_password);
-  WiFi.setHostname("espTenButtonMQTT");
+    
+    WiFi.begin(ssid, wifi_password);
+    WiFi.setHostname("espTenButtonMQTT");
 
-  Serial.print("Connecting to ");
-  Serial.print(ssid);  
+    Serial.print("Connecting to ");
+    Serial.print(ssid);  
 
-  int connectdelays = 0;
+    int connectdelays = 0;
 
-  while (WiFi.status() != WL_CONNECTED) {
-    connectdelays++;
-    delay(500);
-    Serial.print(".");
-    if (connectdelays > 5){break;}
-  }
+    while (WiFi.status() != WL_CONNECTED) {
+        connectdelays++;
+        delay(500);
+        Serial.print(".");
+        if (connectdelays > 10){break;}
+    }
 
-  if(WiFi.status() == WL_CONNECTED) {
-    Serial.println("WiFi connected!");
-  }
+    if(WiFi.status() == WL_CONNECTED) {
+        Serial.println("WiFi connected!");
+    }
   
 }
 
 void mqtt_reconnect() {
-
+    
     if(!mqtt_client.connected()){
         Serial.print("Attempting mqtt connection...");
         if (mqtt_client.connect(clientID, mqtt_username, mqtt_password)) {
@@ -120,64 +117,48 @@ void mqtt_reconnect() {
     }
 }
 
-void setup()
-{
-  // initialize digital pin as an output
-  pinMode(pinLED, OUTPUT);
-  pinPB[1] = 34;
-  pinPB[2] = 39;
-  pinPB[3] = 27;
-  pinPB[4] = 33;
-  pinPB[5] = 15;
-  pinPB[6] = 32;
-  pinPB[7] = 14;
-  pinPB[8] = 36;
-  pinPB[9] = 4;
-  pinPB[10] = 21;
+void setup(){
+  
+    // Set pins for each button number
+    pinMode(pinLED, OUTPUT);
+    pinPB[1] = 34;
+    pinPB[2] = 39;
+    pinPB[3] = 27;
+    pinPB[4] = 33;
+    pinPB[5] = 15;
+    pinPB[6] = 32;
+    pinPB[7] = 14;
+    pinPB[8] = 36;
+    pinPB[9] = 4;
+    pinPB[10] = 21;
   
   // init serial
   Serial.begin(9600);
-  
-  Serial.println("Test InputDebounce library, using inheritance");
   
   // setup input buttons (debounced)
   for(int i = 1; i <= 10; i++){
       PB[i].setPinLED(pinLED);
       PB[i].setup(pinPB[i], BUTTON_DEBOUNCE_DELAY, InputDebounce::PIM_EXT_PULL_DOWN_RES);
   }
-  
-  // examples
-  // buttonTestA.setup(pinSwitchA);
-  // buttonTestA.setup(pinSwitchA, BUTTON_DEBOUNCE_DELAY);
-  // buttonTestA.setup(pinSwitchA, DEFAULT_INPUT_DEBOUNCE_DELAY, InputDebounce::PIM_EXT_PULL_UP_RES);
-  // buttonTestA.setup(pinSwitchA, BUTTON_DEBOUNCE_DELAY, InputDebounce::PIM_INT_PULL_UP_RES, 0, InputDebounce::ST_NORMALLY_CLOSED); // switch-type normally closed
-
-  // WiFi setup //
-
-  setup_wifi(); 
-
-  if (mqtt_client.connect(clientID, mqtt_username, mqtt_password)) {
-    Serial.println("Connected to Fallout Dashboard.");
-  }
-  else {
-    Serial.println("Connection to Fallout Dashboard failed...");
-  }
 }
 
 void loop(){
-    if (WiFi.status() != WL_CONNECTED){
-        setup_wifi();
-    }
+  
+  if (WiFi.status() != WL_CONNECTED){
+      setup_wifi();
+  }
 
-    if (!mqtt_client.connected()) {
-        mqtt_reconnect();
-    }
-    mqtt_client.loop();
+  if (WiFi.status() == WL_CONNECTED && !mqtt_client.connected()) {
+      mqtt_reconnect();
+  }
   
+  mqtt_client.loop();
+
+  // Record time at beginning of scan for debounce calculations
   unsigned long scanstart = millis();
-  
+
   for(i = 1; i <= 10; i++){
-    PB[i].process(scanstart);  
+      PB[i].process(scanstart);  
   }
     
   delay(1); // [ms]
