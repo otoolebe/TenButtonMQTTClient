@@ -2,7 +2,7 @@
 #include <PubSubClient.h>
 #include "InputDebounce.h"
 
-#define BUTTON_DEBOUNCE_DELAY 20   // [ms]
+#define BUTTON_DEBOUNCE_DELAY 50   // [ms]
 
 static const int pinLED = LED_BUILTIN; // 13
 static int pinPB[11];
@@ -10,12 +10,12 @@ int i;
 
 // Network Setup Information
 
-const char* ssid = "VFCFalloutTrackerA";
+const char* ssid = "VFCFalloutTrackerX";
 const char* wifi_password = "BuildTeam32550";
 const char* mqtt_server = "192.168.6.1";  // IP of the MQTT broker (raspberry pi)
-const char* mqtt_username = "VFCA";
+const char* mqtt_username = "VFCX";
 const char* mqtt_password = "";
-const char* clientID = "FalloutA_ESP32"; // MQTT client ID
+const char* clientID = "FalloutX_ESP32"; // MQTT client ID
 const char* button_topic = "falloutdash/button";
 
 WiFiClient wifiClient;
@@ -129,7 +129,7 @@ void setup(){
     pinPB[6] = 32;
     pinPB[7] = 14;
     pinPB[8] = 36;
-    pinPB[9] = 4;
+    pinPB[9] = 23;
     pinPB[10] = 21;
   
   // init serial
